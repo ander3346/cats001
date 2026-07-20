@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MOBA 游戏 - 英雄战场</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #fff;
+        }
+
+        .game-container {
+            width: 1200px;
+            height: 700px;
+            background: linear-gradient(to bottom, #2c3e50, #34495e);
+            border: 3px solid #fff;
+            border-radius: 10px;
+            display: flex;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .game-map {
+            flex: 1;
+            position: relative;
+            background: linear-gradient(135deg, #1a472a 0%, #2d5a3d 100%);
+            border-right: 2px solid #555;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: #1a1a1a;
+            padding: 15px;
+            overflow-y: auto;
+            border-left: 2px solid #555;
+        }
+
+        /* 地图元素 */
+        .tower {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: radial-gradient(circle, #ffd700, #ff8c00);
+            border: 2px solid #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+
+        .tower:hover {
+            transform: scale(1.15);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+        }
+
+        .tower.damaged {
+            background: radial-gradient(circle, #ff6b6b, #cc0000);
+            box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+        }
+
+        .crystal {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background: radial-gradient(circle, #00ffff, #0099ff);
+            border: 3px solid #00ffff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 24px;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.7);
+            animation: crystal-glow 2s ease-in-out infinite;
+        }
+
+        @keyframes crystal-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(0, 255, 255, 0.7); }
+            50% { box-shadow: 0 0 40px rgba(0, 255, 255, 1); }
+        }
+
+        .hero {
+            position: absolute;
+            width: 35px;
+            height: 35px;
+            background: radial-gradient(circle, #ffff00, #ff6600);
+            border: 2px solid #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: move;
+            font-size: 10px;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .hero:hover {
+            transform: scale(1.2);
+            box-shadow: 0 0 15px rgba(255, 255, 0, 0.8);
+        }
+
+        .hero.selected {
+            border: 3px solid #00ff00;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.8);
+        }
+
+        .hero-hp {
+            position: absolute;
+            top: -20px;
+            left: 0;
+            width: 35px;
+            height: 4px;
+            background: #333;
+            border: 1px solid #fff;
+            border-radius: 2px;
+        }
+
+        .hero-hp-bar {
+            height: 100%;
+            background: linear-gradient(to right, #ff0000, #00ff00);
+            border-radius: 2px;
+            transition: width 0.3s;
+        }
+
+        /* 侧边栏 */
+        .sidebar h2 {
+            color: #00ffff;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #00ffff;
+            padding-bottom: 10px;
+        }
+
+        .hero-selector {
+            margin-bottom: 20px;
+        }
+
+        .hero-class {
+            margin-bottom: 15px;
+        }
+
+        .hero-class h3 {
+            color: #ffaa00;
+            font-size: 14px;
+            margin-bottom: 8px;
+            padding: 5px;
+            background: rgba(255, 170, 0, 0.2);
+            border-left: 3px solid #ffaa00;
+        }
+
+        .hero-btn {
+            width: 100%;
+            padding: 8px;
+            margin: 4px 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            border: 1px solid #764ba2;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+
+        .hero-btn:hover {
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+            transform: translateX(5px);
+        }
+
+        .hero-info {
+            background: #2a2a2a;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+            border: 1px solid #444;
+        }
+
+        .hero-info h3 {
+            color: #00ff00;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .stat {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+            font-size: 12px;
+        }
+
+        .stat-label {
+            color: #aaa;
+        }
+
+        .stat-value {
+            color: #00ff00;
+            font-weight: bold;
+        }
+
+        .skill-panel {
+            background: #2a2a2a;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            border: 1px solid #444;
+        }
+
+        .skill-item {
+            background: #1a1a1a;
+            padding: 8px;
+            margin: 5px 0;
+            border-radius: 3px;
+            border-left: 3px solid #00ffff;
+            font-size: 11px;
+        }
+
+        .skill-name {
+            color: #00ffff;
+            font-weight: bold;
+        }
+
+        .skill-desc {
+            color: #aaa;
+            font-size: 10px;
+            margin-top: 2px;
+        }
+
+        .action-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .skill-btn {
+            padding: 8px;
+            background: #0066cc;
+            color: #fff;
+            border: 1px solid #0044aa;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 11px;
+            transition: all 0.3s;
+        }
+
+        .skill-btn:hover:not(:disabled) {
+            background: #0088ff;
+            transform: scale(1.05);
+        }
+
+        .skill-btn:disabled {
+            background: #444;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .skill-btn.ultimate {
+            background: linear-gradient(135deg, #ff6600, #ff0000);
+            border-color: #cc0000;
+            grid-column: span 2;
+        }
+
+        .skill-btn.ultimate:hover:not(:disabled) {
+            background: linear-gradient(135deg, #ff8800, #ff2200);
+        }
+
+        .game-log {
+            background: #1a1a1a;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #444;
+        }
+
+        .log-entry {
+            font-size: 11px;
+            padding: 3px 0;
+            color: #aaa;
+            border-bottom: 1px solid #333;
+        }
+
+        .log-entry.damage {
+            color: #ff6b6b;
+        }
+
+        .log-entry.heal {
+            color: #51cf66;
+        }
+
+        .log-entry.skill {
+            color: #ffd43b;
+        }
+
+        /* 状态指示器 */
+        .status-bar {
+            display: flex;
+            justify-content: space-around;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-top: 1px solid #555;
+            font-size: 12px;
+        }
+
+        .status-item {
+            text-align: center;
+        }
+
+        .status-label {
+            color: #aaa;
+            font-size: 10px;
+        }
+
+        .status-value {
+            color: #00ff00;
+            font-weight: bold;
+        }
+
+        .tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.9);
+            color: #fff;
+            padding: 8px;
+            border-radius: 3px;
+            font-size: 11px;
+            pointer-events: none;
+            display: none;
+            z-index: 1000;
+            white-space: nowrap;
+        }
+
+        .tooltip.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-map" id="gameMap">
+            <div class="tooltip" id="tooltip"></div>
+        </div>
+        <div class="sidebar">
+            <h2>⚔️ 英雄选择</h2>
+            <div class="hero-selector" id="heroSelector"></div>
+            
+            <div class="hero-info" id="heroInfo" style="display: none;">
+                <h3 id="heroName">未选择英雄</h3>
+                <div id="heroStats"></div>
+                <div class="skill-panel" id="skillPanel"></div>
+                <div class="action-buttons" id="actionButtons"></div>
+            </div>
+
+            <div class="game-log" id="gameLog"></div>
+            
+            <div class="status-bar">
+                <div class="status-item">
+                    <div class="status-label">地图事件</div>
+                    <div class="status-value" id="mapStatus">就绪</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-label">水晶血量</div>
+                    <div class="status-value" id="crystalHealth">100%</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== 游戏数据 ====================
+        const heroClasses = {
+            tank: {
+                name: '坦克',
+                color: '#3498db',
+                heroes: [
+                    {
+                        id: 'tank1',
+                        name: '石墙守卫',
+                        hp: 800,
+                        attack: 40,
+                        defense: 50,
+                        skills: [
+                            { name: '盾牌格挡', desc: '减少30%伤害', cooldown: 5 },
+                            { name: '嘲讽', desc: '强制敌人攻击自己', cooldown: 8 },
+                            { name: '石肤', desc: '增加50点防御', cooldown: 6 }
+                        ],
+                        ultimate: { name: '坚壁', desc: '3秒内免疫伤害', cooldown: 20 }
+                    },
+                    {
+                        id: 'tank2',
+                        name: '钢铁骑士',
+                        hp: 900,
+                        attack: 35,
+                        defense: 60,
+                        skills: [
+                            { name: '冲锋', desc: '冲向敌人并造成伤害', cooldown: 6 },
+                            { name: '坚韧', desc: '增加60点防御', cooldown: 7 },
+                            { name: '反击盾', desc: '反弹50%伤害', cooldown: 9 }
+                        ],
+                        ultimate: { name: '无敌斩', desc: '眩晕周围敌人3秒', cooldown: 25 }
+                    },
+                    {
+                        id: 'tank3',
+                        name: '巨魔之王',
+                        hp: 950,
+                        attack: 45,
+                        defense: 45,
+                        skills: [
+                            { name: '践踏', desc: '踩踏地面造成AOE伤害', cooldown: 7 },
+                            { name: '生命护盾', desc: '吸收200点伤害', cooldown: 10 },
+                            { name: '怒吼', desc: '减速敌人50%', cooldown: 6 }
+                        ],
+                        ultimate: { name: '地震', desc: '造成1000伤害并眩晕', cooldown: 30 }
+                    }
+                ]
+            },
+            warrior: {
+                name: '战士',
+                color: '#e74c3c',
+                heroes: [
+                    {
+                        id: 'warrior1',
+                        name: '剑圣',
+                        hp: 600,
+                        attack: 80,
+                        defense: 30,
+                        skills: [
+                            { name: '挥剑', desc: '造成120伤害', cooldown: 4 },
+                            { name: '剑舞', desc: '增加攻击速度50%', cooldown: 6 },
+                            { name: '破甲', desc: '降低目标防御40%', cooldown: 8 }
+                        ],
+                        ultimate: { name: '无双剑气', desc: '造成500伤害的剑气', cooldown: 20 }
+                    },
+                    {
+                        id: 'warrior2',
+                        name: '战鼓骑士',
+                        hp: 700,
+                        attack: 70,
+                        defense: 40,
+                        skills: [
+                            { name: '骑枪', desc: '造成130伤害', cooldown: 5 },
+                            { name: '战鼓', desc: '增加攻击50点', cooldown: 7 },
+                            { name: '冲刺', desc: '快速移动并造成伤害', cooldown: 6 }
+                        ],
+                        ultimate: { name: '骑士冲锋', desc: '冲击造成800伤害', cooldown: 25 }
+                    },
+                    {
+                        id: 'warrior3',
+                        name: '血战士',
+                        hp: 650,
+                        attack: 75,
+                        defense: 35,
+                        skills: [
+                            { name: '鲜血攻击', desc: '造成伤害并吸血20%', cooldown: 5 },
+                            { name: '狂怒', desc: '增加攻击80%但降低防御', cooldown: 8 },
+                            { name: '生命链接', desc: '吸取生命100点', cooldown: 6 }
+                        ],
+                        ultimate: { name: '血色风暴', desc: '造成600伤害并回血300', cooldown: 22 }
+                    }
+                ]
+            },
+            marksman: {
+                name: '射手',
+                color: '#2ecc71',
+                heroes: [
+                    {
+                        id: 'marksman1',
+                        name: '箭雨弓手',
+                        hp: 450,
+                        attack: 90,
+                        defense: 15,
+                        skills: [
+                            { name: '连射', desc: '快速射出3箭，每箭50伤害', cooldown: 4 },
+                            { name: '爆裂箭', desc: '造成150爆炸伤害', cooldown: 6 },
+                            { name: '风行', desc: '增加移动速度100%', cooldown: 5 }
+                        ],
+                        ultimate: { name: '箭雨绝杀', desc: '造成700范围伤害', cooldown: 20 }
+                    },
+                    {
+                        id: 'marksman2',
+                        name: '猎人',
+                        hp: 500,
+                        attack: 85,
+                        defense: 20,
+                        skills: [
+                            { name: '狙击', desc: '远距离精准射击200伤害', cooldown: 5 },
+                            { name: '陷阱', desc: '设置陷阱减速敌人', cooldown: 7 },
+                            { name: '追踪', desc: '标记目标并增加伤害30%', cooldown: 6 }
+                        ],
+                        ultimate: { name: '必杀一枪', desc: '造成900伤害的致命一击', cooldown: 25 }
+                    },
+                    {
+                        id: 'marksman3',
+                        name: '机械枪手',
+                        hp: 480,
+                        attack: 95,
+                        defense: 10,
+                        skills: [
+                            { name: '扫射', desc: '持续造成伤害', cooldown: 3 },
+                            { name: '过载', desc: '增加攻速但消耗生命', cooldown: 8 },
+                            { name: '跳跃', desc: '快速闪避', cooldown: 4 }
+                        ],
+                        ultimate: { name: '弹幕地狱', desc: '造成1000伤害的弹幕', cooldown: 30 }
+                    }
+                ]
+            },
+            mage: {
+                name: '法师',
+                color: '#9b59b6',
+                heroes: [
+                    {
+                        id: 'mage1',
+                        name: '冰法师',
+                        hp: 500,
+                        attack: 70,
+                        defense: 20,
+                        skills: [
+                            { name: '寒冰箭', desc: '造成120伤害并冻结敌人', cooldown: 5 },
+                            { name: '冰墙', desc: '创建冰墙阻挡敌人', cooldown: 7 },
+                            { name: '冰风', desc: '减速所有敌人60%', cooldown: 6 }
+                        ],
+                        ultimate: { name: '永恒冰封', desc: '冻结范围内敌人5秒', cooldown: 25 }
+                    },
+                    {
+                        id: 'mage2',
+                        name: '火法师',
+                        hp: 480,
+                        attack: 75,
+                        defense: 18,
+                        skills: [
+                            { name: '火球术', desc: '造成200爆炸伤害', cooldown: 5 },
+                            { name: '烈火', desc: '造成燃烧效果300伤害', cooldown: 7 },
+                            { name: '隔热', desc: '增加防御30点', cooldown: 6 }
+                        ],
+                        ultimate: { name: '陨石术', desc: '造成800陨石伤害', cooldown: 28 }
+                    },
+                    {
+                        id: 'mage3',
+                        name: '暗黑法师',
+                        hp: 520,
+                        attack: 70,
+                        defense: 22,
+                        skills: [
+                            { name: '暗矢', desc: '造成150伤害和减速', cooldown: 5 },
+                            { name: '灵魂收割', desc: '吸取敌人150生命', cooldown: 8 },
+                            { name: '暗影', desc: '隐身2秒', cooldown: 6 }
+                        ],
+                        ultimate: { name: '深渊之力', desc: '造成700伤害并沉默敌人', cooldown: 26 }
+                    }
+                ]
+            },
+            assassin: {
+                name: '刺客',
+                color: '#f39c12',
+                heroes: [
+                    {
+                        id: 'assassin1',
+                        name: '影舞刺客',
+                        hp: 400,
+                        attack: 110,
+                        defense: 10,
+                        skills: [
+                            { name: '暗杀', desc: '造成250伤害的刺杀', cooldown: 4 },
+                            { name: '影遁', desc: '快速移动并闪避', cooldown: 5 },
+                            { name: '剧毒匕首', desc: '造成毒伤害并减速', cooldown: 6 }
+                        ],
+                        ultimate: { name: '死神之舞', desc: '5秒内无敌并造成1000伤害', cooldown: 30 }
+                    },
+                    {
+                        id: 'assassin2',
+                        name: '刀锋杀手',
+                        hp: 420,
+                        attack: 105,
+                        defense: 12,
+                        skills: [
+                            { name: '旋风斩', desc: '造成200伤害并眩晕', cooldown: 5 },
+                            { name: '闪现', desc: '瞬间移动到目标位置', cooldown: 4 },
+                            { name: '破甲斩', desc: '忽视50%防御', cooldown: 7 }
+                        ],
+                        ultimate: { name: '千刀万剐', desc: '造成900伤害的连击', cooldown: 28 }
+                    },
+                    {
+                        id: 'assassin3',
+                        name: '幽灵刺客',
+                        hp: 380,
+                        attack: 115,
+                        defense: 8,
+                        skills: [
+                            { name: '幽灵突袭', desc: '穿过敌人造成180伤害', cooldown: 4 },
+                            { name: '虚化', desc: '变成幽灵状态免疫伤害', cooldown: 6 },
+                            { name: '死亡标记', desc: '标记敌人增加伤害50%', cooldown: 5 }
+                        ],
+                        ultimate: { name: '灵魂收割', desc: '瞬间移动到���人身后造成1100伤害', cooldown: 32 }
+                    }
+                ]
+            }
+        };
+
+        // ==================== 游戏状态 ====================
+        const gameState = {
+            selectedHero: null,
+            heroes: [],
+            towers: [],
+            crystal: null,
+            gameLog: [],
+            skillCooldowns: {}
+        };
+
+        // ==================== 初始化游戏 ====================
+        function initGame() {
+            createHeroSelector();
+            createMapElements();
+        }
+
+        function createHeroSelector() {
+            const selector = document.getElementById('heroSelector');
+            selector.innerHTML = '';
+
+            Object.entries(heroClasses).forEach(([classKey, classData]) => {
+                const classDiv = document.createElement('div');
+                classDiv.className = 'hero-class';
+                classDiv.innerHTML = `<h3>🎯 ${classData.name}</h3>`;
+
+                classData.heroes.forEach(hero => {
+                    const btn = document.createElement('button');
+                    btn.className = 'hero-btn';
+                    btn.textContent = `${hero.name} (HP:${hero.hp})`;
+                    btn.onclick = () => selectHero(hero);
+                    classDiv.appendChild(btn);
+                });
+
+                selector.appendChild(classDiv);
+            });
+        }
+
+        function selectHero(hero) {
+            gameState.selectedHero = hero;
+            updateHeroInfo();
+            addLog(`选择了 ${hero.name}！`, 'skill');
+        }
+
+        function updateHeroInfo() {
+            const hero = gameState.selectedHero;
+            if (!hero) return;
+
+            const infoDiv = document.getElementById('heroInfo');
+            infoDiv.style.display = 'block';
+            document.getElementById('heroName').textContent = hero.name;
+
+            // 显示属性
+            const statsDiv = document.getElementById('heroStats');
+            statsDiv.innerHTML = `
+                <div class="stat">
+                    <span class="stat-label">生命值:</span>
+                    <span class="stat-value">${hero.hp}</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">攻击力:</span>
+                    <span class="stat-value">${hero.attack}</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">防御力:</span>
+                    <span class="stat-value">${hero.defense}</span>
+                </div>
+            `;
+
+            // 显示技能
+            const skillPanel = document.getElementById('skillPanel');
+            skillPanel.innerHTML = '<strong>技能列表:</strong>';
+            hero.skills.forEach((skill, idx) => {
+                const skillDiv = document.createElement('div');
+                skillDiv.className = 'skill-item';
+                skillDiv.innerHTML = `
+                    <div class="skill-name">技能${idx + 1}: ${skill.name}</div>
+                    <div class="skill-desc">${skill.desc}</div>
+                `;
+                skillPanel.appendChild(skillDiv);
+            });
+
+            const ultimateDiv = document.createElement('div');
+            ultimateDiv.className = 'skill-item';
+            ultimateDiv.style.borderLeftColor = '#ff0000';
+            ultimateDiv.innerHTML = `
+                <div class="skill-name">✨ 大招: ${hero.ultimate.name}</div>
+                <div class="skill-desc">${hero.ultimate.desc}</div>
+            `;
+            skillPanel.appendChild(ultimateDiv);
+
+            // 显示操作按钮
+            const actionButtons = document.getElementById('actionButtons');
+            actionButtons.innerHTML = '';
+            
+            hero.skills.forEach((skill, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'skill-btn';
+                btn.textContent = `技能${idx + 1}`;
+                btn.onclick = () => useSkill(idx);
+                actionButtons.appendChild(btn);
+            });
+
+            const ultimateBtn = document.createElement('button');
+            ultimateBtn.className = 'skill-btn ultimate';
+            ultimateBtn.textContent = `大招: ${hero.ultimate.name}`;
+            ultimateBtn.onclick = () => useSkill(3);
+            actionButtons.appendChild(ultimateBtn);
+        }
+
+        function createMapElements() {
+            const mapContainer = document.getElementById('gameMap');
+            
+            // 创建防御塔 (蓝队3座)
+            const towerPositions = [
+                { x: 150, y: 100, name: '上路塔' },
+                { x: 150, y: 350, name: '中路塔' },
+                { x: 150, y: 600, name: '下路塔' }
+            ];
+
+            towerPositions.forEach((pos, idx) => {
+                const tower = document.createElement('div');
+                tower.className = 'tower';
+                tower.style.left = pos.x + 'px';
+                tower.style.top = pos.y + 'px';
+                tower.textContent = 'T' + (idx + 1);
+                tower.title = pos.name;
+                tower.hp = 500;
+                tower.maxHp = 500;
+                mapContainer.appendChild(tower);
+                gameState.towers.push(tower);
+                
+                tower.addEventListener('mouseenter', (e) => showTooltip(e, `${pos.name}\nHP: ${tower.hp}/${tower.maxHp}`));
+                tower.addEventListener('mouseleave', hideTooltip);
+            });
+
+            // 创建水晶（中心）
+            const crystal = document.createElement('div');
+            crystal.className = 'crystal';
+            crystal.style.left = (mapContainer.offsetWidth / 2 - 25) + 'px';
+            crystal.style.top = (mapContainer.offsetHeight / 2 - 25) + 'px';
+            crystal.textContent = '💎';
+            crystal.hp = 1000;
+            crystal.maxHp = 1000;
+            mapContainer.appendChild(crystal);
+            gameState.crystal = crystal;
+
+            crystal.addEventListener('mouseenter', (e) => showTooltip(e, `守护水晶\nHP: ${crystal.hp}/${crystal.maxHp}`));
+            crystal.addEventListener('mouseleave', hideTooltip);
+        }
+
+        function useSkill(skillIdx) {
+            const hero = gameState.selectedHero;
+            if (!hero) {
+                alert('请先选择英雄！');
+                return;
+            }
+
+            const skill = skillIdx === 3 ? hero.ultimate : hero.skills[skillIdx];
+            const skillName = skillIdx === 3 ? '大招' : `技能${skillIdx + 1}`;
+
+            // 随机选择目标
+            const targets = [...gameState.towers];
+            if (Math.random() > 0.3) targets.push(gameState.crystal);
+
+            if (targets.length > 0) {
+                const target = targets[Math.floor(Math.random() * targets.length)];
+                const baseDamage = hero.attack * (skillIdx === 3 ? 2.5 : 1.5);
+                const damage = Math.floor(baseDamage + Math.random() * 50);
+                
+                target.hp = Math.max(0, target.hp - damage);
+                
+                // 更新视觉效果
+                if (target.hp < target.maxHp / 2) {
+                    target.classList.add('damaged');
+                } else {
+                    target.classList.remove('damaged');
+                }
+
+                const targetName = target === gameState.crystal ? '水晶' : '防御塔';
+                addLog(`${hero.name}使用${skillName}: ${skill.name}，对${targetName}造成${damage}伤害！`, 'damage');
+
+                // 更新水晶血量显示
+                if (target === gameState.crystal) {
+                    const healthPercent = Math.round((target.hp / target.maxHp) * 100);
+                    document.getElementById('crystalHealth').textContent = healthPercent + '%';
+
+                    if (target.hp <= 0) {
+                        addLog('🎉 英雄摧毁了敌方水晶！游戏胜利！', 'skill');
+                    }
+                }
+            }
+        }
+
+        function addLog(message, type = 'normal') {
+            const log = document.getElementById('gameLog');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry ' + type;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+
+            // 只保留最近20条日志
+            const entries = log.querySelectorAll('.log-entry');
+            if (entries.length > 20) {
+                entries[0].remove();
+            }
+        }
+
+        function showTooltip(e, text) {
+            const tooltip = document.getElementById('tooltip');
+            tooltip.textContent = text;
+            tooltip.classList.add('show');
+            tooltip.style.left = (e.pageX - document.querySelector('.game-map').offsetLeft) + 'px';
+            tooltip.style.top = (e.pageY - document.querySelector('.game-map').offsetTop) + 'px';
+        }
+
+        function hideTooltip() {
+            document.getElementById('tooltip').classList.remove('show');
+        }
+
+        // 游戏初始化
+        window.addEventListener('load', initGame);
+
+        // 添加自动事件（模拟游戏进行）
+        setInterval(() => {
+            if (gameState.selectedHero && Math.random() > 0.7) {
+                const skillIdx = Math.floor(Math.random() * 3);
+                useSkill(skillIdx);
+            }
+        }, 3000);
+    </script>
+</body>
+</html>
