@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mini MOBA - 5v5对战游戏</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #1a1a2e;
+            color: #fff;
+            overflow: hidden;
+        }
+
+        .game-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .game-header {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #00ff00;
+        }
+
+        .team-stats {
+            display: flex;
+            gap: 50px;
+        }
+
+        .team {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .team-name {
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        .team.blue .team-name {
+            color: #00bfff;
+        }
+
+        .team.red .team-name {
+            color: #ff4444;
+        }
+
+        .stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.8em;
+            opacity: 0.8;
+        }
+
+        .stat-value {
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        .game-title {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .game-content {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .game-map {
+            flex: 1;
+            background: linear-gradient(135deg, #0a3d0a 0%, #1a1a2e 50%, #3d0a0a 100%);
+            position: relative;
+            border: 2px solid #00ff00;
+        }
+
+        .minimap {
+            width: 200px;
+            height: 200px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #00ff00;
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            overflow: hidden;
+        }
+
+        .minimap-entity {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+        }
+
+        .minimap-entity.blue {
+            background: #00bfff;
+        }
+
+        .minimap-entity.red {
+            background: #ff4444;
+        }
+
+        .unit {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2em;
+            cursor: pointer;
+            border: 2px solid;
+            transition: all 0.1s ease;
+        }
+
+        .unit.blue {
+            background: rgba(0, 191, 255, 0.3);
+            border-color: #00bfff;
+            color: #00bfff;
+        }
+
+        .unit.red {
+            background: rgba(255, 68, 68, 0.3);
+            border-color: #ff4444;
+            color: #ff4444;
+        }
+
+        .unit.selected {
+            box-shadow: 0 0 15px currentColor;
+            width: 40px;
+            height: 40px;
+            margin-left: -5px;
+            margin-top: -5px;
+        }
+
+        .unit-label {
+            position: absolute;
+            top: -25px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            white-space: nowrap;
+            pointer-events: none;
+        }
+
+        .healthbar {
+            position: absolute;
+            width: 40px;
+            height: 3px;
+            background: #333;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .healthbar-fill {
+            height: 100%;
+            background: #00ff00;
+            transition: width 0.2s ease;
+        }
+
+        .tower {
+            position: absolute;
+            width: 25px;
+            height: 25px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.3em;
+            border: 2px solid;
+            border-radius: 3px;
+        }
+
+        .tower.blue {
+            background: rgba(0, 191, 255, 0.5);
+            border-color: #00bfff;
+        }
+
+        .tower.red {
+            background: rgba(255, 68, 68, 0.5);
+            border-color: #ff4444;
+        }
+
+        .projectile {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .projectile.blue {
+            background: #00bfff;
+            box-shadow: 0 0 8px #00bfff;
+        }
+
+        .projectile.red {
+            background: #ff4444;
+            box-shadow: 0 0 8px #ff4444;
+        }
+
+        .ui-panel {
+            width: 300px;
+            background: rgba(0, 0, 0, 0.9);
+            border-left: 2px solid #00ff00;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .unit-info {
+            background: rgba(0, 100, 100, 0.3);
+            padding: 15px;
+            border: 1px solid #00bfff;
+            border-radius: 5px;
+        }
+
+        .unit-name {
+            font-size: 1.1em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .unit-stat {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9em;
+            margin: 5px 0;
+        }
+
+        .control-panel {
+            background: rgba(50, 50, 50, 0.8);
+            padding: 15px;
+            border-radius: 5px;
+        }
+
+        .control-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            background: #00aa44;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            background: #00ff66;
+            transform: scale(1.05);
+        }
+
+        button:disabled {
+            background: #444;
+            cursor: not-allowed;
+            transform: scale(1);
+        }
+
+        .game-log {
+            background: rgba(50, 50, 50, 0.8);
+            padding: 15px;
+            border-radius: 5px;
+            max-height: 200px;
+            font-size: 0.8em;
+            overflow-y: auto;
+        }
+
+        .log-entry {
+            margin: 5px 0;
+            padding: 5px;
+            border-left: 2px solid #00ff00;
+            padding-left: 10px;
+        }
+
+        .log-entry.kill {
+            color: #ff4444;
+        }
+
+        .log-entry.defend {
+            color: #00ff00;
+        }
+
+        @media (max-width: 1200px) {
+            .ui-panel {
+                width: 200px;
+                padding: 10px;
+            }
+
+            .unit {
+                width: 25px;
+                height: 25px;
+            }
+
+            .unit.selected {
+                width: 35px;
+                height: 35px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <div class="team-stats">
+                <div class="team blue">
+                    <div class="team-name">🔵 蓝队</div>
+                    <div class="stat">
+                        <span class="stat-label">击杀</span>
+                        <span class="stat-value" id="blueKills">0</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">经济</span>
+                        <span class="stat-value" id="blueGold">0</span>
+                    </div>
+                </div>
+            </div>
+            <div class="game-title">Mini MOBA 5v5</div>
+            <div class="team-stats">
+                <div class="team red">
+                    <div class="team-name">🔴 红队</div>
+                    <div class="stat">
+                        <span class="stat-label">击杀</span>
+                        <span class="stat-value" id="redKills">0</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">经济</span>
+                        <span class="stat-value" id="redGold">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="game-content">
+            <div class="game-map" id="gameMap">
+                <div class="minimap" id="minimap"></div>
+            </div>
+
+            <div class="ui-panel">
+                <div id="unitInfo" class="unit-info">
+                    <div class="unit-name">选择一个单位</div>
+                    <div class="unit-stat">
+                        <span>生命值: --</span>
+                    </div>
+                    <div class="unit-stat">
+                        <span>攻击力: --</span>
+                    </div>
+                    <div class="unit-stat">
+                        <span>防御: --</span>
+                    </div>
+                </div>
+
+                <div class="control-panel">
+                    <div class="control-title">操作指令</div>
+                    <button onclick="attackNearestEnemy()">攻击最近敌人</button>
+                    <button onclick="defendBase()">保卫基地</button>
+                    <button onclick="pauseGame()">暂停/继续</button>
+                </div>
+
+                <div class="game-log" id="gameLog"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="moba-game.js"></script>
+</body>
+</html>
