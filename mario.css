@@ -1,0 +1,268 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.game-container {
+    background: #000;
+    border: 5px solid #FFD700;
+    border-radius: 10px;
+    padding: 20px;
+    max-width: 900px;
+    width: 100%;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
+}
+
+.header {
+    text-align: center;
+    color: #FFD700;
+    margin-bottom: 20px;
+}
+
+.header h1 {
+    font-size: 2.5em;
+    margin-bottom: 15px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.info {
+    display: flex;
+    justify-content: space-around;
+    background: #1a1a1a;
+    padding: 15px;
+    border-radius: 5px;
+    font-size: 1.2em;
+    font-weight: bold;
+}
+
+.info div {
+    color: #00FF00;
+}
+
+.info span {
+    color: #FFD700;
+}
+
+.game-board {
+    background: linear-gradient(180deg, #87CEEB 0%, #E0F6FF 100%);
+    width: 100%;
+    height: 500px;
+    position: relative;
+    border: 3px solid #333;
+    margin: 20px 0;
+    overflow: hidden;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3);
+}
+
+.mario {
+    width: 40px;
+    height: 50px;
+    background: #ED1C24;
+    position: absolute;
+    border-radius: 3px;
+    font-size: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.1s;
+}
+
+.mario.jumping {
+    animation: jump 0.6s ease-out;
+}
+
+@keyframes jump {
+    0% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-120px);
+    }
+    100% {
+        transform: translateY(0);
+    }
+}
+
+.platform {
+    position: absolute;
+    background: #8B4513;
+    border: 2px solid #654321;
+    border-radius: 3px;
+}
+
+.coin {
+    width: 20px;
+    height: 20px;
+    background: #FFD700;
+    border-radius: 50%;
+    position: absolute;
+    box-shadow: 0 0 5px rgba(255, 215, 0, 0.7);
+    animation: float 2s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+.enemy {
+    width: 40px;
+    height: 40px;
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 25px;
+}
+
+.goomba {
+    background: #8B4513;
+    border-radius: 20px;
+    border: 2px solid #654321;
+}
+
+.koopa {
+    background: #00AA00;
+    border-radius: 3px;
+    border: 2px solid #006600;
+}
+
+.controls {
+    background: #1a1a1a;
+    padding: 20px;
+    border-radius: 5px;
+    text-align: center;
+    color: #FFD700;
+    margin-bottom: 20px;
+}
+
+.controls p {
+    margin: 8px 0;
+    font-size: 0.95em;
+}
+
+button {
+    background: #FFD700;
+    color: #000;
+    border: none;
+    padding: 12px 25px;
+    margin: 10px 5px;
+    font-size: 1em;
+    font-weight: bold;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+button:hover {
+    background: #FFF44F;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+}
+
+button:active {
+    transform: translateY(0);
+}
+
+.start-btn, .pause-btn {
+    background: #00FF00;
+    color: #000;
+}
+
+.start-btn:hover, .pause-btn:hover {
+    background: #33FF33;
+}
+
+.restart-btn {
+    background: #FF6B6B;
+    color: white;
+    font-size: 1.2em;
+    padding: 15px 35px;
+}
+
+.restart-btn:hover {
+    background: #FF8888;
+}
+
+.game-over {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.game-over-content {
+    background: #FFD700;
+    padding: 40px;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0 0 30px rgba(255, 255, 255, 0.5);
+    animation: popIn 0.5s ease-out;
+}
+
+@keyframes popIn {
+    0% {
+        transform: scale(0.5);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.game-over-content h2 {
+    color: #FF0000;
+    font-size: 2.5em;
+    margin-bottom: 20px;
+}
+
+.game-over-content p {
+    color: #000;
+    font-size: 1.3em;
+    margin-bottom: 30px;
+    font-weight: bold;
+}
+
+@media (max-width: 600px) {
+    .header h1 {
+        font-size: 1.8em;
+    }
+
+    .game-board {
+        height: 350px;
+    }
+
+    .info {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .mario {
+        width: 30px;
+        height: 40px;
+        font-size: 20px;
+    }
+}
